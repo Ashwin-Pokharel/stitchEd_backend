@@ -10,7 +10,7 @@ const assignmentSchema = new Schema({
   suggestedDate: { type: Date, required: true },
   points: { type: Number, required: true },
   done: { type: Boolean, required: true },
-  aUuid: {type: uuid, required: true},
+  _id: {type: uuid, required: true},
 }, {
   timestamps: true,
 });

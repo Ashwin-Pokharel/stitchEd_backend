@@ -17,7 +17,7 @@ router.post('/add' , jsonParser, function(req , res){
   const suggestedDate = Date.parse(req.body.suggestedDate);
   const points = Number(req.body.points);
   const done = Boolean(req.body.done);
-  const aUuid = uuid.v4();
+  const _id = uuid.v4();
 
   const newAssignment = new Assignment({
     name,
@@ -26,7 +26,7 @@ router.post('/add' , jsonParser, function(req , res){
     suggestedDate,
     points,
     done,
-    aUuid,
+    _id,
   });
 
   newAssignment.save()
@@ -34,20 +34,27 @@ router.post('/add' , jsonParser, function(req , res){
   .catch(err => res.status(400).json('Error: ' + err));
 });
 
-router.put('/update/:id' , jsonParser, function(req , res){
-    Assignment.findById(req.params.id)
-    .then(assignment => {
-        assignment.name = req.body.name;
-        assignment.dueDate = Date.parse(req.body.dueDate);
-        assignment.completionTime = Number(req.body.completionTime);
-        assignment.suggestedDate = Date.parse(req.body.suggestedDate);
-        assignment.points = Number(req.body.points);
-        assignment.done = Boolean(req.body.done);
+router.put('/update/' , jsonParser, function(req , res){
+    const name = req.body.name;
+    const dueDate = Date.parse(req.body.dueDate);
+    const completionTime = Number(req.body.completionTime);
+    const suggestedDate = Date.parse(req.body.suggestedDate);
+    const points = Number(req.body.points);
+    const done = Boolean(req.body.done);
+    const _id = req.body._id;
 
-      name.save()
-        .then(() => res.json('Assignment updated!'))
-        .catch(err => res.status(400).json('Error: ' + err));
-    })
+    const updatedAssignment = new Assignment({
+        name,
+        dueDate,
+        completionTime,
+        suggestedDate,
+        points,
+        done,
+        _id,
+      });
+
+    Assignment.findByIdAndUpdate(_id, updatedAssignment)
+    .then(() => res.json('Assignment updated!'))
     .catch(err => res.status(400).json('Error: ' + err));
 });
 
