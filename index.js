@@ -27,7 +27,6 @@ const authRoutes = require('./routes/authenticate');
 const assignmentRoutes = require('./routes/assignment');
 
 app.use('' , authRoutes)
-app.use('/assignment' , assignmentRoutes)
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
