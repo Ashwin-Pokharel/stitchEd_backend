@@ -6,7 +6,7 @@ const StudentAssignment = require('./studentAssignments').schema
 
 
 var extendedStudentSchema = new schema({
-    assignments: [StudentAssignment],
+    assignments: [{type:mongoose.SchemaTypes.ObjectId , ref:'StudentAssignment'}],
     total_points: {type:Number , default:0}
 }) 
 

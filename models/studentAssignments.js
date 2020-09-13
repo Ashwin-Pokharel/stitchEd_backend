@@ -4,7 +4,7 @@ const Assignment = require('./assignment').schema
 
 
 var studentAssignment = new schema({
-    assignment :{type:schema.Types.ObjectId , required:true},
+    assignment : {type: mongoose.SchemaTypes.ObjectId, required:true , ref:'Assignment'},
     chosen_due_date : {type:Date , required:false},
     chosen_start_time : {type:Number , reqired:false},
     chosen_end_time : {type:Number , required:false},
@@ -14,7 +14,6 @@ var studentAssignment = new schema({
     completion_flag: {type:Boolean , require:true , default:false},
     completion_time: { type: Date, required: false },
 })
-
 
 module.exports = mongoose.model("StudentAssignment" , studentAssignment)
 

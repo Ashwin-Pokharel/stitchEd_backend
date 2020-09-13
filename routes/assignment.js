@@ -8,6 +8,7 @@ const Teacher = require('../models/teacher')
 const Student = require('../models/student');
 const user = require('../models/user');
 
+/*
 router.get('/student/get_unassigned_assignments' , jsonParser, (req , res)=>{
     if(!req.isAuthenticated()){
       return res.status(403).json({success:false , error:"user is not authenticated"})
@@ -28,7 +29,7 @@ router.get('/student/get_unassigned_assignments' , jsonParser, (req , res)=>{
       return res.status(200).json({success:true , assignments:docs})
     })
 });
-
+*/
 
 router.post('/add_assignment' , jsonParser, (req , res) =>{
   if(!req.isAuthenticated()){ //check to see if user is authenticated
@@ -37,18 +38,16 @@ router.post('/add_assignment' , jsonParser, (req , res) =>{
   const name = req.body.name;
   const dueDate = Date(req.body.dueDate);
   const suggestedDate = Date(req.body.suggestedDate);
-  const _id = uuid.v4();
 
   const newAssignment = new Assignment({
     name,
     dueDate,
     suggestedDate,
-    _id,
   });
 
   newAssignment.save((err , doc)=>{
   if(err){
-    return res.status(400).json()
+    return res.status(400).json({success:false , error:err})
   }
   var filter = {
     username: req.user.username
@@ -56,45 +55,43 @@ router.post('/add_assignment' , jsonParser, (req , res) =>{
   Teacher.findOne(
     filter, (err , teacher)=>{
       if(err){
-         res.status(400).json({success:false , error:err})
+         return res.status(400).json({success:false , error:err})
       }
-      if(teacher != null){
+      if(teacher){
         teacher.created_assignments.push(doc._id)
         teacher.save((err , teacherdoc) =>{
           if(err){
-             res.status(400).json({success:false , error:err});
+             return res.status(400).json({success:false , error:err});
           }
           for (let student_id of teacherdoc.students){
             var tempAssignment  = new StudentAssignment({
               assignment : doc._id
             })
-            Student.findById(student_id , (err , student) =>{
+            tempAssignment.save((err , savedTempAssignment)=>{
               if(err){
-                res.status(400).json({success:false , error:err});
+                return res.status(400).json({success:false , error:err});
               }
               else{
-                student.assignments.push(tempAssignment)
-                student.save((err , studentDoc) =>{
-                  if(err){
-                    res.status(400).json({success:false , error:err});
-                  }
-                  return;
-                })
-                return;
+                if(savedTempAssignment){
+                  Student.updateOne({_id:student_id}, {$push: { assignments: savedTempAssignment._id}} , (err, response)=>{
+                    if(err){
+                      return res.status(400).json({success:false , error:err});
+                    };
+                  })
+                };
               }
             })
-          };
-          return res.status(200).json({success:true , assignment: doc});
-      })
+          }
+          return res.status(200).json({success:true , assignment: doc})
+        })
       }
       else{
-        return res.status(400).json({success:false})
+        return res.status(400).json({success:false , error:"teacher does not exist"})
       }
     })
-    return res 
   })
 });
-
+/*
 router.post('/update_points' ,jsonParser ,(req , res)=>{
     if(!req.isAuthenticated()){
       return res.status(403).json({success:false , error:"user is not authenticated"})
@@ -160,6 +157,6 @@ router.post('/get_assignment_info' , jsonParser , (req , res)=>{
     
   })
 })
-
+*/
 
 module.exports = router;

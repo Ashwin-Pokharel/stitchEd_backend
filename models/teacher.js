@@ -7,8 +7,8 @@ const Student = require('./student').schema
 
 
 var extendedTeacherSchema = new schema({
-    students: [{type: schema.Types.ObjectId , ref: 'Student'}], 
-    created_assignments : [{type:String, ref: 'Assignment'}],
+    students: [{type: mongoose.SchemaTypes.ObjectId, ref:'Student'}], 
+    created_assignments : [{type:mongoose.SchemaTypes.ObjectId, ref: 'Assignment'}],
     join_code : {type:String, required:true , unique:true}
 })
 

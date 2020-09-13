@@ -7,7 +7,6 @@ const assignmentSchema = new Schema({
   name: { type: String, required: true },
   dueDate: { type: Date, required: true },
   suggestedDate: { type: Date, required: true },
-  _id: {type: uuid, required: true},
 }, {
   timestamps: true,
 });
