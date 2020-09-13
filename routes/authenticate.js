@@ -117,6 +117,8 @@ router.post('/login', jsonParser , function(req , res){
                             username: studentres.username,
                             name: studentres.name,
                             email: studentres.email,
+                            total_points: studentres.total_points,
+                            assignments: studentres.assignments
                             
                         }})
                     })
