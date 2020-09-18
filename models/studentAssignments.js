@@ -4,7 +4,7 @@ const Assignment = require('./assignment').schema
 
 
 var studentAssignment = new schema({
-    assignment : {type: mongoose.SchemaTypes.ObjectId, required:true , ref:'Assignment'},
+    assignment_id : {type: mongoose.SchemaTypes.ObjectId, required:true , ref:'Assignment'},
     chosen_due_date : {type:Date , required:false},
     chosen_start_time : {type:Number , reqired:false},
     chosen_end_time : {type:Number , required:false},

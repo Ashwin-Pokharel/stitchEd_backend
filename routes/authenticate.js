@@ -56,17 +56,20 @@ router.post('/register' , jsonParser, function(req , res){
                         if(err){
                             return res.status(400).json({success:false , error:err})
                         }
-                        result.students.push(student._id)
-                        result.save().then(() =>{
-                            return res.status(200).json({success:true , user:{
-                                _id : student._id,
-                                username: student.username,
-                                email: user.email,
-                                name: user.name
-                            }})     
-                        }).catch((err)=>{
-                            return res.status(400).json({success:false , errors:err})
-                        })
+                        if(result != null){
+                            result.students.push(student._id)
+                            result.save().then(() =>{
+                                return res.status(200).json({success:true , user:{
+                                    _id : student._id,
+                                    username: student.username,
+                                    email: user.email,
+                                    name: user.name
+                                }})     
+                            })
+                        }
+                        else{
+                            return res.status(400).json({success:false , error:"wrong join code"})
+                        }
                     })
                 }).catch((err)=>{
                     return res.status(400).json({success:false , errors:err})
@@ -84,7 +87,6 @@ router.post('/login', jsonParser , function(req , res){
    if(req.body.password == undefined){
        return res.status(400).json({success:false , errors:"password is undefined"})
    }
-   console.log("poop")
    passport.authenticate('local' ,{failureFlash:true , failureRedirect:'/'} ,(err , user , info)=>{
        if(err){
             return res.status(400).json({success:false , errors:err})

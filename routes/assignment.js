@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const uuid = require('uuid');
+const mongoose = require('mongoose')
 const Assignment = require('../models/assignment');
 const StudentAssignment = require('../models/studentAssignments')
 const bodyParser = require('body-parser')
@@ -8,28 +9,46 @@ const Teacher = require('../models/teacher')
 const Student = require('../models/student');
 const user = require('../models/user');
 
-/*
-router.get('/student/get_unassigned_assignments' , jsonParser, (req , res)=>{
+
+router.post('/student/get_unassigned_assignments' , jsonParser , (req , res)=>{
     if(!req.isAuthenticated()){
       return res.status(403).json({success:false , error:"user is not authenticated"})
     }
-    var filter = {
-      username : req.user.username
-    }
-    Student.exists(filter).then(exist =>{
-      if(!exist){
-        return res.status(400).json({success:false , error:"student does not exist"})
-      }
-    });
-    Student.find(filter , {assignments: {$elemMatch : {"scheduled_flag":false}}} , (err , docs)=>{
-      if(err){
-        return res.status(400).json({success:false , error:err})
-      }
-      console.log(docs)
-      return res.status(200).json({success:true , assignments:docs})
+    let id = mongoose.Types.ObjectId(req.body.id)
+    var assignments = [];
+    Student.aggregate([
+      {$match : {_id: id}},
+      {$unwind: "$assignments"},
+    ]).then((array)=>{
+      new Promise((resolve , reject) => {
+          var counter = 0
+          array.forEach(async (assignment)=>{
+            counter += 1
+            await StudentAssignment.findOne({_id:assignment.assignments, scheduled_flag:false} , (err , doc)=>{
+              if(err){
+              return res.status(400).json({success:false , error:err})
+            }
+            if(doc != null){
+              assignments.push(doc)
+             }
+            return;
+            })
+            if(counter === array.length){
+              console.log("resolve")
+              resolve();
+            }
+          })
+        }).then(()=>{
+          return res.status(200).json({success:true , assignments:assignments})
+        }).catch((err)=>{
+          return res.status(400).json({success:false , error:err})
+        })
+    }).catch((err)=>{
+      return res.status(400).json({success:false , error:err})
     })
-});
-*/
+  })
+  
+
 
 router.post('/add_assignment' , jsonParser, (req , res) =>{
   if(!req.isAuthenticated()){ //check to see if user is authenticated
@@ -65,11 +84,11 @@ router.post('/add_assignment' , jsonParser, (req , res) =>{
           }
           for (let student_id of teacherdoc.students){
             var tempAssignment  = new StudentAssignment({
-              assignment : doc._id
+              assignment_id : doc._id
             })
             tempAssignment.save((err , savedTempAssignment)=>{
               if(err){
-                return res.status(400).json({success:false , error:err});
+                return res.status(400).json({success:false , error:err})
               }
               else{
                 if(savedTempAssignment){
@@ -91,72 +110,40 @@ router.post('/add_assignment' , jsonParser, (req , res) =>{
     })
   })
 });
-/*
-router.post('/update_points' ,jsonParser ,(req , res)=>{
-    if(!req.isAuthenticated()){
-      return res.status(403).json({success:false , error:"user is not authenticated"})
-    }
-    var id = req.body.id
-    var points = req.body.points
-    var filter = {
-      username : req.user.username,
-      "assignemnts._id": id
-    }
-    Student.findOneAndUpdate(filter,
-      {$set: {"assignments.$.student_points":points}},
-      (err , doc)=>{
-        if(err){
-          return res.status(400).json({success:false})
-        }
-        else{
-          return res.status(200).json({success:true , assignment: doc});
-        }
-    })
-  }
-)
+
 
 router.post('/get_assignment_info' , jsonParser , (req , res)=>{
-  var return_dict = {
-    complete:0,
-    incomplete:0,
-    hours_spent:[
-
-    ]
-  }
-  var assignment_id = req.body.id
-
   if(!req.isAuthenticated()){
     return res.status(403).json({success:false , error:"user is not authenticated"})
   }
-  Teacher.findOne({username:req.user.username}, (err , teacher)=>{
+  var assignment_info = {}
+  var id = req.body.id
+  Assignment.findById(id , (err , document)=>{
     if(err){
-      return res.status(400).json({success:false , error :err})
+      return res.status(400).json({success:false , error:err})
     }
-
-    for(let students of teacher.students){
-      Student.findById(students._id , (err , student)=>{
-        if(err){
-          return res.status(400).json({success:false , error :err})
-        }
-        assignments = student.assignments
-        for(let assignment of assignments){
-          if(assignment._id == assignment_id){
-            if(assignment.completion_flag){
-              return_dict.complete += 1;
-              return_dict.hours_spent.push(assignment.hours_worked)
-            }
-            else{
-              return_dict.incomplete += 1;
-            }
-            break;
-          }
-        }
-      })
+    assignment_info["assignment_details"] = document
+  })
+  StudentAssignment.countDocuments({assignment_id : id , completion_flag:true} , (err , count)=>{
+    if(err){
+      return res.status(400).json({success:false , error:err})
     }
-    return res.status(200).json({success:true , assignment_info:return_dict})
-    
+    assignment_info["completed"] = count
+  })
+  StudentAssignment.countDocuments({assignment_id: id , completion_flag:false} , (err , count)=>{
+    if(err){
+      return res.status(400).json({success:false , error:err})
+    }
+    assignment_info["incomplete"] = count
+  })
+  StudentAssignment.find({assignment_id:id , completion_flag:true} , 'hours_worked', (err , document)=>{
+    if(err){
+      return res.status(400).json({success:false , error:err})
+    }
+    assignment_info["hours_worked"] = document
+    return res.status(200).json(assignment_info)
   })
 })
-*/
+
 
 module.exports = router;
